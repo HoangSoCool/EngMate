@@ -23,41 +23,31 @@ builder.Services.AddControllersWithViews();
 // Register MongoDB services
 builder.Services.Configure<TiengAnh.Services.MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings"));
-
-// Trước đoạn code này:
 builder.Services.AddSingleton<MongoDbService>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
     var logger = sp.GetRequiredService<ILogger<MongoDbService>>();
     
-    // Tìm kiếm chuỗi kết nối từ nhiều nguồn khác nhau
-    var connectionString = configuration["MongoDB:ConnectionString"] 
-        ?? configuration["MONGODB_CONNECTION_STRING"] 
-        ?? configuration["MongoDbSettings:ConnectionString"]
-        ?? Environment.GetEnvironmentVariable("MONGODB_URI")
-        ?? Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING");
+    // Đơn giản hóa việc tìm kiếm chuỗi kết nối - ưu tiên MONGODB_URI trên Render
+    var connectionString = Environment.GetEnvironmentVariable("MONGODB_URI")
+        ?? configuration["MongoDB:ConnectionString"]
+        ?? configuration["MongoDbSettings:ConnectionString"];
     
     // Log thông tin để debug
     logger.LogInformation($"MongoDB Config Source: {(connectionString != null ? "Found" : "Not Found")}");
     
-    // Kiểm tra tất cả các biến môi trường để dễ debug
-    logger.LogInformation("Kiểm tra biến môi trường:");
-    foreach (var env in Environment.GetEnvironmentVariables().Keys)
-    {
-        if (env.ToString().Contains("MONGO") || env.ToString().Contains("DB"))
-        {
-            logger.LogInformation($"ENV: {env}");
-        }
-    }
+    // Kiểm tra biến môi trường
+    var uri = Environment.GetEnvironmentVariable("MONGODB_URI");
+    logger.LogInformation($"MONGODB_URI environment variable: {(string.IsNullOrEmpty(uri) ? "Not found" : "Found")}");
     
     if (string.IsNullOrEmpty(connectionString))
     {
-        logger.LogError("Không tìm thấy chuỗi kết nối MongoDB. Vui lòng cấu hình biến môi trường.");
+        logger.LogError("Không tìm thấy chuỗi kết nối MongoDB. Vui lòng cấu hình biến môi trường MONGODB_URI.");
         
         // Trong môi trường production, thử sử dụng chuỗi kết nối MongoDB Atlas mặc định
         if (!builder.Environment.IsDevelopment())
         {
-            // Chuỗi kết nối MongoDB Atlas mà bạn biết rõ - có thể thay đổi tùy theo project của bạn
+            // Chuỗi kết nối MongoDB Atlas mà bạn biết rõ
             connectionString = "mongodb+srv://hoangnguyntb:hoang123@engmate.7s6pdbs.mongodb.net/TiengAnhDB?retryWrites=true&w=majority";
             logger.LogWarning("Sử dụng chuỗi kết nối MongoDB Atlas mặc định");
         }
@@ -67,25 +57,13 @@ builder.Services.AddSingleton<MongoDbService>(sp =>
         }
     }
     
-    var databaseName = configuration["MongoDB:DatabaseName"] 
-        ?? configuration["MONGODB_DATABASE_NAME"] 
+    var databaseName = Environment.GetEnvironmentVariable("MONGODB_DATABASE_NAME")
+        ?? configuration["MongoDB:DatabaseName"] 
         ?? configuration["MongoDbSettings:DatabaseName"]
-        ?? Environment.GetEnvironmentVariable("MONGODB_DATABASE_NAME")
-        ?? "EngMateDB";
+        ?? "TiengAnhDB";
     
     return new MongoDbService(connectionString, databaseName, logger);
 });
-
-// Replace placeholder values with environment variables
-var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
-if (mongoConnectionString?.Contains("#{MONGODB_URI}#") == true)
-{
-    var envMongoUri = Environment.GetEnvironmentVariable("MONGODB_URI");
-    if (!string.IsNullOrEmpty(envMongoUri))
-    {
-        builder.Configuration["MongoDbSettings:ConnectionString"] = envMongoUri;
-    }
-}
 
 // Register repositories
 builder.Services.AddScoped<UserRepository>();

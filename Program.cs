@@ -24,13 +24,12 @@ builder.Services.AddControllersWithViews();
 // Cấu hình Data Protection - trước khi đăng ký các dịch vụ khác
 builder.Services.AddDataProtection()
     .SetApplicationName("TiengAnh")
-    .DisableAutomaticKeyGeneration(); // Tắt tạo khóa tự động
+    // Xóa dòng DisableAutomaticKeyGeneration() vì nó ngăn hệ thống tạo khóa mới
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(90)) // Thiết lập thời gian sống của khóa
+    .ProtectKeysWithDpapi(); // Bảo vệ khóa bằng DPAPI (Windows) hoặc tự động trên Linux/macOS
     
-// Hoặc sử dụng cấu hình này nếu muốn lưu khóa vào thư mục cố định
-// Lưu ý: trên Render, bạn cần thêm một persistent volume nếu muốn ghi vào thư mục
-// builder.Services.AddDataProtection()
-//     .SetApplicationName("TiengAnh")
-//     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "keys")));
+// Bỏ comment dòng sau nếu trong tương lai bạn có persistent volume trên Render
+// .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "keys")));
 
 // Register MongoDB services
 builder.Services.Configure<TiengAnh.Services.MongoDbSettings>(
@@ -151,8 +150,9 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
     
-    // Thêm cấu hình để không cần mã hóa
+    // Đặt tên cookie phiên để dễ nhận diện
     options.Cookie.Name = ".EngMate.Session";
 });
 

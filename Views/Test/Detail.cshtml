@@ -1,0 +1,191 @@
+@model TiengAnh.Models.TestModel
+@{
+    ViewData["Title"] = "Chi tiết bài kiểm tra";
+    var userAnswers = ViewBag.UserAnswers as int[];
+    var score = ViewBag.Score != null ? Convert.ToInt32(ViewBag.Score) : 0;
+    var correctCount = ViewBag.CorrectCount != null ? Convert.ToInt32(ViewBag.CorrectCount) : 0;
+    var timeTaken = ViewBag.TimeTaken as string ?? "00:00";
+    
+    // Get completion time if available
+    var completedAt = ViewBag.CompletedAt != null ? 
+        Convert.ToDateTime(ViewBag.CompletedAt) : 
+        DateTime.Now;
+}
+
+<div class="container py-5">
+    <div class="card border-0 shadow mb-4">
+        <div class="card-body p-4">
+            <h1 class="h2 mb-3">@Model.Title - Chi tiết bài làm</h1>
+            
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="badge bg-primary me-2">@Model.Level</span>
+                    <span class="badge bg-info me-2">@Model.Category</span>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <div class="me-4">
+                        <strong class="d-block">Điểm số</strong>
+                        <span class="text-@(score >= 80 ? "success" : score >= 60 ? "info" : score >= 50 ? "warning" : "danger") fs-4">@score%</span>
+                    </div>
+                    <div class="me-4">
+                        <strong class="d-block">Câu đúng</strong>
+                        <span class="fs-4">@correctCount/@Model.Questions.Count</span>
+                    </div>
+                    <div>
+                        <strong class="d-block">Thời gian</strong>
+                        <span class="fs-4">@timeTaken</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add completion time display here -->
+            <div class="alert alert-light mb-4">
+                <small class="d-block text-muted">
+                    <i class="bi bi-calendar-check me-1"></i>Nộp bài lúc: @completedAt.ToString("dd/MM/yyyy HH:mm") (GMT+7)
+                </small>
+            </div>
+            
+            <a href="@Url.Action("Result", "Test", new { id = Model.Id })" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-1"></i>Quay lại trang kết quả
+            </a>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-lg-9">
+            @for (int i = 0; i < Model.Questions.Count; i++)
+            {
+                var question = Model.Questions[i];
+                var questionNumber = i + 1;
+                var userAnswer = userAnswers.Length > i ? userAnswers[i] : -1;
+                var isCorrect = userAnswer == question.CorrectAnswer;
+                var statusClass = isCorrect ? "success" : "danger";
+                var statusIcon = isCorrect ? "check-circle" : "x-circle";
+                var statusText = isCorrect ? "Đúng" : "Sai";
+                
+                <div class="card border-0 shadow-sm mb-4 question-card" id="question-@questionNumber">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Câu @questionNumber</h5>
+                        <span class="badge bg-@statusClass">
+                            <i class="bi bi-@statusIcon me-1"></i>@statusText
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">@question.QuestionText</h5>
+                        
+                        <div class="options-list">
+                            @for (int j = 0; j < question.Options.Count; j++)
+                            {
+                                var optionClass = "";
+                                var optionIcon = "";
+                                
+                                if (j == userAnswer && j == question.CorrectAnswer) {
+                                    optionClass = "success";
+                                    optionIcon = "<i class='bi bi-check-circle-fill text-success me-2'></i>";
+                                }
+                                else if (j == userAnswer) {
+                                    optionClass = "danger";
+                                    optionIcon = "<i class='bi bi-x-circle-fill text-danger me-2'></i>";
+                                }
+                                else if (j == question.CorrectAnswer) {
+                                    optionClass = "success-light";
+                                    optionIcon = "<i class='bi bi-check-circle text-success me-2'></i>";
+                                }
+                                
+                                <div class="option-item border rounded p-3 mb-2 @optionClass">
+                                    @Html.Raw(optionIcon)
+                                    @question.Options[j]
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Danh sách câu hỏi</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        @for (int i = 0; i < Model.Questions.Count; i++)
+                        {
+                            var questionNum = i + 1;
+                            var userAnswer = userAnswers.Length > i ? userAnswers[i] : -1;
+                            var isCorrect = userAnswer == Model.Questions[i].CorrectAnswer;
+                            var btnClass = isCorrect ? "btn-success" : (userAnswer >= 0 ? "btn-danger" : "btn-outline-secondary");
+                            
+                            <a href="#question-@questionNum" class="btn @btnClass btn-sm question-nav-btn">@questionNum</a>
+                        }
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="badge bg-success me-2"> </div>
+                            <small>Câu trả lời đúng</small>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="badge bg-danger me-2"> </div>
+                            <small>Câu trả lời sai</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="@Url.Action("Take", "Test", new { id = Model.Id })" class="btn btn-primary">
+                            <i class="bi bi-arrow-repeat me-2"></i>Làm lại bài kiểm tra
+                        </a>
+                        <a href="@Url.Action("Index", "Test")" class="btn btn-outline-secondary">
+                            <i class="bi bi-list me-2"></i>Xem tất cả bài kiểm tra
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .success {
+        background-color: rgba(25, 135, 84, 0.1);
+        border-color: #198754 !important;
+    }
+    
+    .danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-color: #dc3545 !important;
+    }
+    
+    .success-light {
+        background-color: rgba(25, 135, 84, 0.05);
+        border-color: rgba(25, 135, 84, 0.5) !important;
+    }
+    
+    .question-nav-btn {
+        width: 40px;
+        height: 40px;
+        text-align: center;
+        padding: 0;
+        line-height: 40px;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Smooth scroll to question when clicking navigation buttons
+            document.querySelectorAll('.question-nav-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+}

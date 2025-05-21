@@ -1,0 +1,305 @@
+﻿@using TiengAnh.Models
+@using TiengAnh.Repositories
+@using Microsoft.AspNetCore.Authentication
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EngMate</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/engmate.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/no-animations.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/avatar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/TiengAnh.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/hover-translate.css" />
+    @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+        .language-dropdown .btn { min-width: 150px; text-align: left; }
+        .navbar-nav { flex-wrap: nowrap; width: auto; overflow-x: visible; }
+        .navbar-nav .nav-item { margin-right: 5px; white-space: nowrap; }
+        .navbar-nav .nav-link { padding: 8px 10px !important; font-size: 1rem; white-space: nowrap; }
+        .navbar { padding-top: 8px !important; padding-bottom: 8px !important; }
+        .container { max-width: 1400px; }
+        .navbar-collapse { justify-content: space-between; flex-wrap: nowrap; }
+        .dropdown-menu { min-width: 220px; padding: 10px 0; }
+        .dropdown-item { padding: 10px 20px; }
+        .user-menu .btn { padding: 8px 12px; font-size: 1rem; }
+        .dropdown { margin-left: 5px; }
+        .guest-menu { display: flex; align-items: center; }
+        .d-flex.align-items-center { flex-wrap: nowrap; white-space: nowrap; }
+        @@media (max-width: 991.98px) {
+            .navbar-nav { flex-direction: column; }
+            .navbar-nav .nav-item { margin-right: 0; margin-bottom: 5px; }
+        }
+        .avatar-error { border: 2px solid #ffcccb; opacity: 0.8; }
+        .avatar-success { border: 2px solid #d4edda; }
+    </style>
+</head>
+<body>
+    @inject TiengAnh.Repositories.UserRepository UserRepository
+
+    @{
+        var username = User.Identity.Name;
+        string userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        UserModel user = null;
+        
+        try
+        {
+            user = !string.IsNullOrEmpty(userId) ? await UserRepository.GetByUserIdAsync(userId) : null;
+            if (user == null && !string.IsNullOrEmpty(username))
+            {
+                user = await UserRepository.GetByEmailAsync(username);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log but continue - don't crash the layout
+            Console.WriteLine($"Error fetching user: {ex.Message}");
+        }
+    }
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-primary-soft">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/Logo.png" alt="EngMate Logo" class="me-2 animate__animated animate__bounceIn" width="40" height="40" />
+                    <span class="brand-text">EngMate</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-home"></i> Trang chủ
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Vocabulary" asp-action="Index">
+                                <i class="fas fa-book"></i> Từ vựng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Grammar" asp-action="Index">
+                                <i class="fas fa-pen"></i> Ngữ pháp
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Exercise" asp-action="Index">
+                                <i class="fas fa-tasks"></i> Bài tập
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Test" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" 
+                               asp-controller="Test" 
+                               asp-action="Index">
+                                <i class="fas fa-file-alt me-1"></i> Bài kiểm tra
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Test" && ViewContext.RouteData.Values["action"]?.ToString() == "Progress" ? "active" : "")" 
+                               asp-controller="Test" 
+                               asp-action="Progress">
+                                <i class="fas fa-chart-line me-1"></i> Tiến trình
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Favorites" asp-action="Index">
+                                <i class="fas fa-heart"></i> Yêu thích
+                            </a>
+                        </li>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="contentDropdown" role="button" 
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-plus-circle"></i> Thêm Nội Dung
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="contentDropdown">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Content" asp-action="AddVocabulary">
+                                            <i class="fas fa-book"></i> Thêm nội dung từ vựng
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Content" asp-action="AddGrammar">
+                                            <i class="fas fa-pen"></i> Thêm nội dung ngữ pháp
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+                    <!-- Đăng nhập/Đăng ký hoặc User Profile -->
+                    <div class="user-menu">
+                        <ul class="navbar-nav">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <li class="nav-item dropdown">
+                                    <button class="btn dropdown-toggle d-flex align-items-center" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        @if (user != null && !string.IsNullOrEmpty(user.Avatar))
+                                        {
+                                            <img src="@(user.Avatar)" class="rounded-circle me-2 avatar" alt="@username" 
+                                                width="30" height="30" style="object-fit: cover;"
+                                                onerror="this.onerror=null; this.src='/images/default-avatar.png?v=@DateTime.Now.Ticks';">
+                                        }
+                                        else
+                                        {
+                                            <img src="/images/default-avatar.png" class="rounded-circle me-2 avatar" alt="@username" 
+                                                width="30" height="30" style="object-fit: cover;">
+                                        }
+                                        <span class="user-name">@username</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                        <li>
+                                            <a class="dropdown-item" href="@Url.Action("Profile", "Account")">
+                                                <i class="fas fa-user me-2"></i> Hồ sơ của tôi
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="@Url.Action("Index", "Favorites")">
+                                                <i class="fas fa-heart me-2"></i> Mục yêu thích
+                                            </a>
+                                        </li>
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" href="@Url.Action("ManageUsers", "Account")">
+                                                    <i class="fas fa-users-cog me-2"></i> Quản lý người dùng
+                                                </a>
+                                            </li>
+                                        }
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item" href="@Url.Action("Logout", "Account")">
+                                                <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Login", "Account")" class="btn btn-outline-primary me-2">
+                                        <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Register", "Account")" class="btn btn-primary">
+                                        <i class="fas fa-user-plus me-1"></i> Đăng ký
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main role="main" class="pb-3 flex-grow-1">
+        @RenderBody()
+        <div style="padding-bottom: 2.5rem;"></div>
+    </main>
+    <footer class="footer mt-auto py-5 text-white">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <h3 class="fs-2 fw-bold mb-3">Về EngMate</h3>
+                    <div class="d-flex flex-column">
+                        <a href="#" class="text-white fs-5 mb-2 text-decoration-none">
+                            <i class="fas fa-envelope me-2 text-primary"></i> contact@engmate.com
+                        </a>
+                        <a href="#" class="text-white fs-5 text-decoration-none">
+                            <i class="fas fa-phone me-2 text-primary"></i> +84 123 456 789
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h3 class="fs-2 fw-bold mb-3">Liên kết nhanh</h3>
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <a href="/" class="text-white text-decoration-none fs-5">
+                                <i class="fas fa-home me-2 text-primary"></i> Trang chủ
+                            </a>
+                        </li>
+                        <li class="mb-3">
+                            <a href="/Vocabulary" class="text-white text-decoration-none fs-5">
+                                <i class="fas fa-book me-2 text-primary"></i> Từ vựng
+                            </a>
+                        </li>
+                        <li class="mb-3">
+                            <a href="/Grammar" class="text-white text-decoration-none fs-5">
+                                <i class="fas fa-pencil-alt me-2 text-primary"></i> Ngữ pháp
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-lg-5 col-md-12">
+                    <h3 class="fs-2 fw-bold mb-3">Kết nối với chúng tôi</h3>
+                    <div class="d-flex mb-4">
+                        <a href="https://www.facebook.com/profile.php?id=61576148285969" target="_blank" class="text-white fs-2 me-4 text-decoration-none">
+                            <i class="fab fa-facebook-square"></i>
+                        </a>
+                        <a href="https://www.instagram.com/engmate_25/" target="_blank" class="text-white fs-2 me-4 text-decoration-none">
+                             <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-top border-light border-opacity-25 mt-4 pt-4 text-center">
+                <p class="fs-5 mb-0">© 2025 - EngMate - Đã đăng ký bản quyền</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Toast notification container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+        <!-- Toasts will be dynamically inserted here -->
+    </div>
+    
+    <!-- Hidden fields for toast notifications -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <input type="hidden" id="temp-success-message" value="@TempData["SuccessMessage"]" />
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <input type="hidden" id="temp-error-message" value="@TempData["ErrorMessage"]" />
+    }
+    
+    <style>
+        .footer {
+            background: linear-gradient(135deg, #3a5af4 0%, #4e73fa 100%);
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+        }
+        .footer a:hover {
+            color: #ffffff !important;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        .footer .text-primary {
+            color: #d1dfff !important;
+        }
+        .footer h3 {
+            border-bottom: 2px solid #ffffff;
+            display: inline-block;
+            padding-bottom: 8px;
+        }
+    </style>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/animations.js" asp-append-version="true"></script>
+    <script src="~/js/notification-toasts.js" asp-append-version="true"></script>
+    <script src="~/js/hover-translate.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

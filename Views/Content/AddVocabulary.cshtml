@@ -1,0 +1,371 @@
+@model TiengAnh.Models.VocabularyModel
+@{
+    ViewData["Title"] = "Thêm nội dung từ vựng";
+}
+
+<div class="container my-5">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3><i class="fas fa-book me-2"></i>Thêm nội dung từ vựng</h3>
+        </div>
+        <div class="card-body p-4">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            
+            <form method="post" enctype="multipart/form-data" asp-action="AddVocabulary" asp-controller="Content">
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Word_TV" class="form-label fw-bold">Từ tiếng Anh <span class="text-danger">*</span></label>
+                            <input asp-for="Word_TV" id="EnglishWord" class="form-control" required />
+                            <div id="wordSuggestions" class="suggestions"></div>
+                            <span asp-validation-for="Word_TV" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Meaning_TV" class="form-label fw-bold">Nghĩa tiếng Việt <span class="text-danger">*</span></label>
+                            <input asp-for="Meaning_TV" id="VietnameseWord" class="form-control" required />
+                            <span asp-validation-for="Meaning_TV" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Example_TV" class="form-label fw-bold">Câu ví dụ <span class="text-danger">*</span></label>
+                            <textarea asp-for="Example_TV" id="ExampleSentence" class="form-control" rows="3" required></textarea>
+                            <span asp-validation-for="Example_TV" class="text-danger"></span>
+                            <small class="form-text text-muted">Ví dụ: I have a black cat as a pet.</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nghe phát âm</label>
+                            <div class="d-flex align-items-center">
+                                <button type="button" id="speakButton" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-volume-up"></i> Nghe phát âm
+                                </button>
+                                <small class="form-text text-muted">Tự động phát âm theo từ tiếng Anh</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Hình ảnh minh họa</label>
+                            <input type="file" name="ImageFile" id="imageFile" class="form-control" accept="image/*" />
+                            <!-- Add this hidden input to handle the required validation -->
+                            <input type="hidden" name="ImageFileSubmitted" id="imageFileSubmitted" value="true" />
+                            <small class="form-text text-muted">Tùy chọn, kích thước tối đa: 2MB. Định dạng: JPG, PNG. Không cần thiết cho các chủ đề như Trạng từ, Giới từ.</small>
+                            <div id="imagePreview" class="mt-2 text-center d-none">
+                                <img src="" alt="Preview" class="img-thumbnail" style="max-height: 200px;" />
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Level_TV" class="form-label fw-bold">Cấp độ <span class="text-danger">*</span></label>
+                                    <select asp-for="Level_TV" id="Level" class="form-select" required>
+                                        <option value="">-- Chọn cấp độ --</option>
+                                        <option value="A1">A1 - Sơ cấp</option>
+                                        <option value="A2">A2 - Sơ trung cấp</option>
+                                        <option value="B1">B1 - Trung cấp</option>
+                                        <option value="B2">B2 - Cao trung cấp</option>
+                                        <option value="C1">C1 - Cao cấp</option>
+                                    </select>
+                                    <span asp-validation-for="Level_TV" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ID_LT" class="form-label fw-bold">Loại từ <span class="text-danger">*</span></label>
+                                    <select asp-for="ID_LT" id="Type" class="form-select" required>
+                                        <option value="">-- Chọn loại từ --</option>
+                                        <option value="n">n - Danh từ (Noun)</option>
+                                        <option value="v">v - Động từ (Verb)</option>
+                                        <option value="adj">adj - Tính từ (Adjective)</option>
+                                        <option value="adv">adv - Trạng từ (Adverb)</option>
+                                        <option value="prep">prep - Giới từ (Preposition)</option>
+                                        <option value="conj">conj - Liên từ (Conjunction)</option>
+                                        <option value="pron">pron - Đại từ (Pronoun)</option>
+                                        <option value="det">det - Hạn định từ (Determiner)</option>
+                                        <option value="interj">interj - Thán từ (Interjection)</option>
+                                    </select>
+                                    <input type="hidden" id="partOfSpeechFull" asp-for="PartOfSpeech" />
+                                    <span asp-validation-for="ID_LT" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="ID_CD" class="form-label fw-bold">Chủ đề <span class="text-danger">*</span></label>
+                            <select asp-for="ID_CD" id="Topic" class="form-select" required>
+                                <option value="">-- Chọn chủ đề --</option>
+                                @if (ViewBag.Topics != null)
+                                {
+                                    foreach (var topic in ViewBag.Topics)
+                                    {
+                                        <option value="@topic.ID_CD" data-name="@topic.Name_CD">@topic.ID_CD - @topic.Name_CD</option>
+                                    }
+                                }
+                            </select>
+                            <input type="hidden" id="topicName" asp-for="TopicName" />
+                            <span asp-validation-for="ID_CD" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="@Url.Action("Index", "Vocabulary")" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Lưu từ vựng
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Image preview with size validation
+            const imageFile = document.getElementById('imageFile');
+            const imagePreview = document.getElementById('imagePreview');
+            const typeSelect = document.getElementById('Type');
+            
+            imageFile.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    if (this.files[0].size > 2 * 1024 * 1024) {
+                        alert('Hình ảnh vượt quá kích thước 2MB.');
+                        this.value = '';
+                        imagePreview.classList.add('d-none');
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.classList.remove('d-none');
+                        imagePreview.querySelector('img').src = e.target.result;
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                } else {
+                    imagePreview.classList.add('d-none');
+                }
+            });
+
+            // Check if type requires image on form submit
+            document.querySelector('form').addEventListener('submit', function(e) {
+                const noImageTypes = ['adv', 'prep', 'conj', 'det', 'interj'];
+                const selectedType = typeSelect.value;
+                
+                // If no image is selected, and the selected type doesn't require an image, 
+                // we'll still let the form submit
+                if (!imageFile.files || imageFile.files.length === 0) {
+                    // Form will submit normally for types that don't require images
+                    if (noImageTypes.includes(selectedType)) {
+                        return true;
+                    }
+                    
+                    // For types that typically need images, we'll show a confirmation
+                    if (!confirm('Bạn chưa chọn hình ảnh minh họa. Bạn có muốn tiếp tục lưu từ vựng không?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // Text to speech functionality
+            const speakButton = document.getElementById('speakButton');
+            const wordInput = document.getElementById('EnglishWord');
+            
+            speakButton.addEventListener('click', function() {
+                const word = wordInput.value.trim();
+                if (word) {
+                    speakWord(word);
+                } else {
+                    alert('Vui lòng nhập từ cần phát âm');
+                }
+            });
+            
+            function speakWord(word) {
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(word);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert('Trình duyệt của bạn không hỗ trợ phát âm.');
+                }
+            }
+            
+            // Auto-fill part of speech full name
+            const partOfSpeechFull = document.getElementById('partOfSpeechFull');
+            
+            typeSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.value) {
+                    const fullText = selectedOption.text.split(' - ')[1];
+                    partOfSpeechFull.value = fullText;
+                } else {
+                    partOfSpeechFull.value = '';
+                }
+            });
+            
+            // Auto-fill topic name
+            const topicSelect = document.getElementById('Topic');
+            const topicName = document.getElementById('topicName');
+            
+            topicSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.value) {
+                    topicName.value = selectedOption.getAttribute('data-name');
+                } else {
+                    topicName.value = '';
+                }
+            });
+
+            // Fetch word details with debouncing
+            let typingTimer;
+            const doneTypingInterval = 500; // 0.5 seconds
+            
+            $('#EnglishWord').on('input', function() {
+                clearTimeout(typingTimer);
+                const word = $(this).val().trim();
+                
+                if (word.length >= 1) {
+                    typingTimer = setTimeout(function() {
+                        fetchWordDetails(word);
+                    }, doneTypingInterval);
+                } else {
+                    $('#wordSuggestions').hide();
+                }
+            });
+            
+            function fetchWordDetails(word) {
+                $('#wordSuggestions').html('<p>Đang tìm kiếm chi tiết từ...</p>').show();
+                
+                $.ajax({
+                    url: `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`,
+                    method: 'GET',
+                    success: function(data) {
+                        if (data && data.length > 0) {
+                            processWordData(data[0]);
+                            $('#wordSuggestions').hide();
+                        } else {
+                            $('#wordSuggestions').html('<p>Không tìm thấy từ. Vui lòng thử từ khác.</p>');
+                            setTimeout(function() {
+                                $('#wordSuggestions').fadeOut();
+                            }, 3000);
+                        }
+                    },
+                    error: function() {
+                        $('#wordSuggestions').html('<p>Không tìm thấy từ. Vui lòng thử từ khác.</p>');
+                        setTimeout(function() {
+                            $('#wordSuggestions').fadeOut();
+                        }, 3000);
+                    }
+                });
+                
+                $.ajax({
+                    url: `https://api.mymemory.translated.net/get`,
+                    method: 'GET',
+                    data: {
+                        q: word,
+                        langpair: 'en|vi'
+                    },
+                    success: function(response) {
+                        if (response && response.responseData && response.responseData.translatedText) {
+                            $('#VietnameseWord').val(response.responseData.translatedText);
+                        } else {
+                            $('#VietnameseWord').val('Không có bản dịch');
+                        }
+                    },
+                    error: function() {
+                        $('#VietnameseWord').val('Không có bản dịch');
+                    }
+                });
+            }
+            
+            function processWordData(wordData) {
+                let exampleSentence = '';
+                if (wordData.meanings && wordData.meanings.length > 0) {
+                    for (const meaning of wordData.meanings) {
+                        if (meaning.definitions && meaning.definitions.length > 0) {
+                            for (const def of meaning.definitions) {
+                                if (def.example) {
+                                    exampleSentence = def.example;
+                                    break;
+                                }
+                            }
+                            if (exampleSentence) break;
+                        }
+                    }
+                }
+                $('#ExampleSentence').val(exampleSentence || `The ${wordData.word} is bright today.`);
+
+                const partOfSpeechMap = {
+                    'noun': 'n',
+                    'verb': 'v',
+                    'adjective': 'adj',
+                    'adverb': 'adv',
+                    'preposition': 'prep',
+                    'conjunction': 'conj',
+                    'pronoun': 'pron',
+                    'determiner': 'det',
+                    'interjection': 'interj'
+                };
+                let selectedPartOfSpeech = '';
+                if (wordData.meanings && wordData.meanings.length > 0) {
+                    const partOfSpeech = wordData.meanings[0].partOfSpeech?.toLowerCase();
+                    selectedPartOfSpeech = partOfSpeechMap[partOfSpeech] || '';
+                }
+                $('#Type').val(selectedPartOfSpeech);
+                if (selectedPartOfSpeech) {
+                    const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+                    partOfSpeechFull.value = selectedOption ? selectedOption.text.split(' - ')[1] : '';
+                }
+
+                const wordLength = wordData.word.length;
+                let level = 'A1';
+                if (wordLength > 8) {
+                    level = 'C1';
+                } else if (wordLength > 6) {
+                    level = 'B2';
+                } else if (wordLength > 4) {
+                    level = 'B1';
+                } else if (wordLength > 2) {
+                    level = 'A2';
+                }
+                $('#Level').val(level);
+            }
+        });
+    </script>
+}
+
+<style>
+    .suggestions {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        margin-top: 5px;
+        display: none;
+    }
+</style>

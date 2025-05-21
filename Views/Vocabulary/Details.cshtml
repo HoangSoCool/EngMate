@@ -1,0 +1,304 @@
+@model VocabularyModel
+@{
+    ViewData["Title"] = Model.Word_TV;
+}
+
+<!-- Vocabulary Detail Header -->
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Vocabulary")">Từ vựng</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Topic", "Vocabulary", new { id = Model.ID_CD })">@Model.TopicName</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.Word_TV</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-5">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h1 class="display-4 fw-bold text-primary mb-0">@Model.Word_TV</h1>
+                            <div class="d-flex align-items-center mt-2">
+                                <span class="part-of-speech me-2">@Model.PartOfSpeech</span>
+                                <span class="level-badge level-@Model.Level_TV">@Model.Level_TV</span>
+                            </div>
+                        </div>
+                        <button class="audio-btn" style="width: 50px; height: 50px;">
+                            <i class="fas fa-volume-up fa-lg"></i>
+                        </button>
+                    </div>
+
+                    <div class="row mb-4">
+                        @{
+                            bool isNoImageTopic = new[] { 13, 14, 15, 16, 17 }.Contains(Model.ID_CD);
+                        }
+                        @if (!isNoImageTopic)
+                        {
+                            <div class="col-md-5">
+                                <img src="@Model.Image_TV" alt="@Model.Word_TV" class="img-fluid rounded shadow-sm" />
+                            </div>
+                        }
+                        <div class="@(isNoImageTopic ? "col-md-12" : "col-md-7")">
+                            <h3 class="fw-bold mb-3">Nghĩa</h3>
+                            <p class="lead mb-4">@Model.Meaning_TV</p>
+
+                            <h3 class="fw-bold mb-3">Ví dụ</h3>
+                            <div class="example-card p-3 mb-3 rounded" style="background-color: #f8f9fa;">
+                                <p class="mb-0 font-italic">@Model.Example_TV</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <h3 class="fw-bold mb-3">Ghi chú bổ sung</h3>
+                            <p>Từ "@Model.Word_TV" thuộc chủ đề <strong>@Model.TopicName</strong> và thường xuất hiện trong các bài học trình độ @Model.Level_TV.</p>
+                        </div>
+                    </div>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Delete" asp-route-id="@Model.ID_TV" class="btn btn-danger">
+                            <i class="fas fa-trash-alt me-2"></i>Xóa từ vựng
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h4 class="card-title mb-3">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>
+                        Mẹo học từ vựng
+                    </h4>
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Nghe phát âm và lặp lại nhiều lần
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Viết câu ví dụ với từ này
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Kết hợp với hình ảnh để nhớ lâu hơn
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Ôn lại từ này sau 1 ngày, 3 ngày và 1 tuần
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h4 class="card-title mb-3">
+                        <i class="fas fa-link text-primary me-2"></i>
+                        Từ liên quan
+                    </h4>
+                    <div class="related-words">
+                        @if (ViewBag.RelatedWords != null && ViewBag.RelatedWords.Count > 0)
+                        {
+                            @foreach (var relatedWord in ViewBag.RelatedWords)
+                            {
+                                <a href="@Url.Action("Details", "Vocabulary", new { id = relatedWord.ID_TV })" 
+                                   class="badge bg-light text-dark p-2 mb-2 me-2 d-inline-block">
+                                    @relatedWord.Word_TV
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">Không có từ vựng liên quan.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Practice Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">Luyện tập với từ này</h3>
+            
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h4 class="card-title mb-3">Trắc nghiệm</h4>
+                    <p>Chọn nghĩa tiếng Việt đúng cho từ <strong>@Model.Word_TV</strong>:</p>
+                    
+                    <div class="quiz-container">
+                        <div class="mb-3">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="quizAnswer" id="option1" value="correct">
+                                <label class="form-check-label" for="option1">
+                                    @Model.Meaning_TV
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="quizAnswer" id="option2" value="incorrect1">
+                                <label class="form-check-label" for="option2">
+                                    @GetRandomWrongAnswer(Model.Meaning_TV, 1)
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="quizAnswer" id="option3" value="incorrect2">
+                                <label class="form-check-label" for="option3">
+                                    @GetRandomWrongAnswer(Model.Meaning_TV, 2)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button class="btn btn-primary" id="checkAnswerBtn">Kiểm tra đáp án</button>
+                        <div class="feedback-message mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup audio button
+            const audioBtn = document.querySelector('.audio-btn');
+            if (audioBtn) {
+                audioBtn.addEventListener('click', function() {
+                    const word = '@Model.Word_TV';
+                    const audioUrl = 'https://ssl.gstatic.com/dictionary/static/sounds/oxford/' + word.toLowerCase() + '--_us_1.mp3';
+                    const audio = new Audio(audioUrl);
+                    
+                    // Add animation to button while playing
+                    this.innerHTML = '<i class="fas fa-volume-up fa-lg fa-beat"></i>';
+                    
+                    audio.play();
+                    
+                    // Reset button after audio ends
+                    audio.onended = () => {
+                        this.innerHTML = '<i class="fas fa-volume-up fa-lg"></i>';
+                    };
+                });
+            }
+
+            // Xử lý kiểm tra đáp án
+            const checkAnswerBtn = document.getElementById('checkAnswerBtn');
+            const feedbackMessage = document.querySelector('.feedback-message');
+            
+            checkAnswerBtn.addEventListener('click', function() {
+                let correctCount = 0;
+                let totalQuestions = 1;
+                
+                // Kiểm tra câu hỏi về nghĩa của từ
+                const selectedWord = document.querySelector('input[name="quizAnswer"]:checked');
+                if (selectedWord && selectedWord.value === 'correct') {
+                    correctCount++;
+                }
+                
+                // Hiển thị kết quả
+                feedbackMessage.style.display = 'block';
+                
+                if (correctCount === 0) {
+                    feedbackMessage.className = 'feedback-message mt-3 alert alert-danger';
+                    feedbackMessage.textContent = 'Bạn chưa chọn đúng đáp án nào. Hãy thử lại!';
+                } else {
+                    feedbackMessage.className = 'feedback-message mt-3 alert alert-success';
+                    feedbackMessage.textContent = 'Chúc mừng! Bạn đã trả lời đúng.';
+                    
+                    // Gọi hàm cập nhật tiến độ
+                    markAsCompleted();
+                }
+                
+                // Đánh dấu đáp án đúng và sai
+                highlightCorrectAnswers();
+            });
+            
+            function highlightCorrectAnswers() {
+                document.querySelectorAll('input[name="quizAnswer"]').forEach(input => {
+                    const label = input.nextElementSibling;
+                    if (input.value === 'correct') {
+                        label.classList.add('text-success', 'fw-bold');
+                    } else if (input.checked) {
+                        label.classList.add('text-danger', 'text-decoration-line-through');
+                    }
+                });
+            }
+
+            // Gửi cập nhật tiến độ khi hoàn thành từ vựng
+            function markAsCompleted() {
+                const vocabularyId = @Model.ID_TV;
+                const vocabularyTitle = "@Model.Word_TV";
+                const topicId = @Model.ID_CD;
+                const topicName = "@Model.TopicName";
+                
+                window.progressTracker.updateProgress({
+                    type: 'Vocabulary',
+                    title: vocabularyTitle,
+                    score: 100,
+                    pointsEarned: 5,
+                    topicId: topicId,
+                    topicName: topicName,
+                    completionPercentage: 100
+                }).then(data => {
+                    if (data.success) {
+                        showNotification('Đã cập nhật tiến độ học tập', 'success');
+                    }
+                });
+            }
+            
+            // Hiển thị thông báo
+            function showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type} notification-toast position-fixed`;
+                notification.style.top = '20px';
+                notification.style.right = '20px';
+                notification.style.zIndex = '9999';
+                notification.style.minWidth = '300px';
+                notification.style.boxShadow = '0 0.5rem 1rem rgba(0,0,0,0.15)';
+                notification.innerHTML = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+        });
+    </script>
+}
+
+@functions {
+    public string GetRandomWrongAnswer(string correctAnswer, int seed)
+    {
+        // Danh sách các đáp án sai dựa trên từng loại từ
+        var animalAnswers = new[] { "Loài thực vật", "Loại hoa", "Nơi ở", "Dụng cụ nhà bếp", "Phương tiện giao thông" };
+        var foodAnswers = new[] { "Loại đồ chơi", "Dụng cụ học tập", "Vật dụng cá nhân", "Nơi công cộng", "Loại thức uống" };
+        var defaultAnswers = new[] { "Thể loại âm nhạc", "Môn thể thao", "Nội thất", "Thiết bị điện tử", "Ngành nghề" };
+        
+        // Chọn danh sách đáp án dựa vào đáp án đúng
+        string[] wrongOptions;
+        if (correctAnswer.Contains("Con") || correctAnswer.Contains("con") || correctAnswer.Contains("động vật"))
+            wrongOptions = animalAnswers;
+        else if (correctAnswer.Contains("ăn") || correctAnswer.Contains("uống") || correctAnswer.Contains("Quả"))
+            wrongOptions = foodAnswers;
+        else
+            wrongOptions = defaultAnswers;
+        
+        // Đảm bảo không trùng với đáp án đúng
+        var index = (seed * 31) % wrongOptions.Length;
+        return wrongOptions[index];
+    }
+}

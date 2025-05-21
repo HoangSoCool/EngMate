@@ -1,0 +1,207 @@
+@model List<TopicModel>
+@{
+    ViewData["Title"] = "Từ vựng tiếng Anh";
+}
+
+<!-- Hero Section -->
+<section class="hero-section py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-4 fw-bold mb-4">Từ vựng tiếng Anh</h1>
+                <p class="lead mb-4">
+                    Học từ vựng theo chủ đề với phương pháp khoa học và hiệu quả. Từ vựng được phân loại theo chủ đề và trình độ, giúp việc học trở nên dễ dàng và thú vị.
+                </p>
+            </div>
+            <div class="col-md-6">
+                <img src="/images/vocabulary-hero.jpg" alt="Vocabulary learning" class="img-fluid" style="max-height: 400px;"" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Topics Section -->
+<section id="topic-section" class="py-5">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="fw-bold">Chủ đề từ vựng</h2>
+                        <p class="text-muted">Chọn một chủ đề để bắt đầu học từ vựng</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var topic in Model)
+            {
+                <div class="col-md-6 col-lg-4 topic-item" data-level="@topic.Level">
+                    <div class="card h-100 border-0 shadow-sm topic-card" style="background-color: @topic.BackgroundColor">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between mb-3">
+                                <div>
+                                    <span class="badge bg-light text-dark">@topic.Level</span>
+                                    <span class="badge bg-light text-dark ms-2">@topic.WordCount từ</span>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mb-3">
+                                <img src="@topic.IconPath" alt="@topic.Name_CD" class="topic-icon" style="width: 150px; height: 150px;" />
+                            </div>
+                            
+                            <h3 class="card-title text-center fw-bold mb-3">@topic.Name_CD</h3>
+                            <p class="card-text text-center">@topic.Description_CD</p>
+                            
+                            <a href="@Url.Action("Topic", "Vocabulary", new { id = topic.ID_CD })" class="btn btn-primary w-100 mt-3">
+                                <i class="fas fa-book me-2"></i> Học ngay
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Learning Tips Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-12 text-center">
+                <h2 class="fw-bold">Mẹo học từ vựng hiệu quả</h2>
+                <p class="text-muted">Áp dụng những phương pháp học từ vựng khoa học</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <i class="fas fa-sync-alt text-primary fa-2x"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Học lặp lại theo chu kỳ</h4>
+                        <p class="card-text">Ôn tập từ vựng theo chu kỳ Spaced Repetition giúp ghi nhớ lâu hơn. Ôn lại từ vựng sau 1 ngày, 1 tuần, và 1 tháng.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <i class="fas fa-pen text-success fa-2x"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Viết và sử dụng</h4>
+                        <p class="card-text">Viết câu sử dụng từ mới và áp dụng vào tình huống thực tế để tăng khả năng ghi nhớ và sử dụng từ vựng hiệu quả.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <i class="fas fa-volume-up text-warning fa-2x"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Nghe và phát âm</h4>
+                        <p class="card-text">Luyện nghe và phát âm đúng từ vựng. Sử dụng tính năng phát âm để làm quen với cách phát âm chuẩn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filter topics by level
+            const levelFilters = document.querySelectorAll('#levelFilterDropdown + .dropdown-menu .dropdown-item');
+            levelFilters.forEach(filter => {
+                filter.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Update active state
+                    levelFilters.forEach(item => item.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update dropdown text
+                    const level = this.getAttribute('data-level');
+                    document.getElementById('levelFilterDropdown').textContent = this.textContent;
+                    
+                    // Filter topics
+                    const topicItems = document.querySelectorAll('.topic-item');
+                    topicItems.forEach(item => {
+                        if (level === 'all' || item.getAttribute('data-level') === level) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+            
+            // Display notification
+            function showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type} notification-toast`;
+                notification.style.position = 'fixed';
+                notification.style.top = '20px';
+                notification.style.right = '20px';
+                notification.style.zIndex = '9999';
+                notification.style.minWidth = '300px';
+                notification.style.padding = '15px';
+                notification.style.boxShadow = '0 0.5rem 1rem rgba(0,0,0,0.15)';
+                notification.innerHTML = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+        });
+    </script>
+}
+
+<style>
+    .hero-section {
+        background-color: #f8f9fa;
+        padding: 80px 0;
+    }
+    
+    .topic-card {
+        transition: all 0.3s;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .topic-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .topic-icon {
+        transition: all 0.5s;
+    }
+    
+    .topic-card:hover .topic-icon {
+        transform: scale(1.1);
+    }
+    
+    .notification-toast {
+        animation: fadeInRight 0.5s forwards;
+    }
+    
+    @@keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+</style>

@@ -1,0 +1,515 @@
+@model UserModel
+@{
+    ViewData["Title"] = "Hồ sơ người dùng";
+    bool isEditMode = ViewContext.HttpContext.Request.Query.ContainsKey("edit");
+    string userIdFromClaims = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+    string timestamp = DateTime.Now.Ticks.ToString();
+}
+
+<div class="container mt-5">
+    <!-- Add anti-forgery token form for the main profile page -->
+    <form id="antiforgery-form">
+        @Html.AntiForgeryToken()
+    </form>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Hồ sơ của tôi</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h3 class="fw-bold mb-0">
+                        @(isEditMode ? "Chỉnh sửa thông tin" : "Thông tin cá nhân")
+                        @if (!isEditMode)
+                        {
+                            <a href="@Url.Action("Profile", "Account", new { edit = true })" class="btn btn-sm btn-outline-primary float-end">
+                                <i class="fas fa-edit"></i> Chỉnh sửa
+                            </a>
+                        }
+                    </h3>
+                </div>
+                <div class="card-body text-center pt-4">
+                    <div class="avatar-container mb-3">
+                        <img id="user-avatar" src="@(string.IsNullOrEmpty(Model.Avatar) ? "/images/default-avatar.png" : Model.Avatar + $"?v={timestamp}")" 
+                             class="img-fluid rounded-circle avatar-img" alt="Avatar" onerror="this.src='/images/default-avatar.png'">
+                    </div>
+                    
+                    <button type="button" id="upload-avatar-btn" class="btn btn-primary btn-sm mb-3">
+                        <i class="fas fa-upload me-1"></i> Tải lên ảnh đại diện
+                    </button>
+                    
+                    <h4 class="fw-bold mb-0">@Model.FullName</h4>
+                    <p class="text-muted">@Model.Username</p>
+                    
+                    <div class="mt-4">
+                        <a href="@Url.Action("ChangePassword", "Account")" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-key me-1"></i> Đổi mật khẩu
+                        </a>
+                    </div>
+                    
+                    <input type="file" id="avatar-upload" accept="image/*" style="display: none;" />
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            @if (isEditMode)
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="fw-bold mb-0">Chỉnh sửa thông tin cá nhân</h3>
+                        </div>
+                        
+                        <form asp-action="UpdateProfile" method="post" asp-antiforgery="true">
+                            <input type="hidden" asp-for="Id" />
+                            <input type="hidden" asp-for="UserId" />
+                            <input type="hidden" asp-for="Email" />
+                            <input type="hidden" asp-for="Username" />
+                            <input type="hidden" asp-for="UserName" />
+                            <input type="hidden" asp-for="Level" />
+                            <input type="hidden" asp-for="Points" />
+                            <input type="hidden" asp-for="RegisterDate" />
+                            <input type="hidden" asp-for="Role" />
+                            <input type="hidden" asp-for="CreatedAt" />
+                            <input type="hidden" asp-for="IsVerified" />
+                            <input type="hidden" asp-for="PasswordHash" />
+                            <input type="hidden" asp-for="Avatar" />
+
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label class="form-label">Họ và tên</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                        <input type="text" class="form-control" asp-for="FullName" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                        <input type="email" class="form-control" asp-for="Email" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label class="form-label">Số điện thoại</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                        <input type="tel" class="form-control" asp-for="Phone">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Ngày sinh</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                        @if (Model.DateOfBirth.HasValue)
+                                        {
+                                            <input type="date" class="form-control" asp-for="DateOfBirth" value="@Model.DateOfBirth.Value.ToString("yyyy-MM-dd")">
+                                        }
+                                        else
+                                        {
+                                            <input type="date" class="form-control" asp-for="DateOfBirth">
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label class="form-label">Giới tính</label>
+                                    <select class="form-select" asp-for="Gender">
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Tên người dùng</label>
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" asp-for="Username" placeholder="Tên người dùng">
+                                        <label>Tên người dùng</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Địa chỉ</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                                    <input type="text" class="form-control" asp-for="Address">
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Giới thiệu bản thân</label>
+                                <textarea class="form-control" asp-for="Bio" rows="4" placeholder="Viết một vài điều về bản thân..."></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="@Url.Action("Profile")" class="btn btn-outline-secondary px-4">
+                                    <i class="fas fa-times me-1"></i> Hủy
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-save me-1"></i> Lưu thay đổi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="fw-bold mb-0">Thông tin cá nhân</h3>
+                            <a href="?edit=true" class="btn btn-sm btn-outline-primary px-3">
+                                <i class="fas fa-edit me-1"></i> Chỉnh sửa
+                            </a>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label>Họ và tên</label>
+                                    <p>@Model.FullName</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label>Email</label>
+                                    <p>@Model.Email</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label>Số điện thoại</label>
+                                    <p>@(string.IsNullOrEmpty(Model.Phone) ? "Chưa cập nhật" : Model.Phone)</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label>Ngày sinh</label>
+                                    <p>
+                                        @if (Model.DateOfBirth.HasValue)
+                                        {
+                                            <span>@Model.DateOfBirth.Value.ToString("dd/MM/yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Chưa cập nhật</span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label>Giới tính</label>
+                                    <p>@(string.IsNullOrEmpty(Model.Gender) ? "Chưa cập nhật" : Model.Gender)</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label>Tên người dùng</label>
+                                    <p>@Model.Username</p>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="info-item">
+                                    <label>Địa chỉ</label>
+                                    <p>@(string.IsNullOrEmpty(Model.Address) ? "Chưa cập nhật" : Model.Address)</p>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="info-item">
+                                    <label>Giới thiệu bản thân</label>
+                                    <p>@(string.IsNullOrEmpty(Model.Bio) ? "Chưa cập nhật" : Model.Bio)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal for cropping avatar -->
+<div class="modal fade" id="avatar-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cập nhật ảnh đại diện</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container mb-3">
+                    <img id="avatar-image" src="" alt="Avatar Preview" class="img-fluid">
+                </div>
+                <div class="cropper-controls d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="rotate-left">
+                        <i class="fas fa-undo"></i> Xoay trái
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="upload-status" style="display: none;">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <span>Đang tải lên...</span>
+                </div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="save-avatar">Lưu ảnh</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+    <style>
+        .progress-circle { margin: 0 auto; }
+        .circular-chart { display: block; max-width: 100%; max-height: 100%; }
+        .circle-bg { fill: none; stroke: #eee; stroke-width: 2; }
+        .circle { fill: none; stroke-width: 2; stroke-linecap: round; animation: progress 1s ease-out forwards; }
+        .progress-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        @@keyframes progress { 0% { stroke-dasharray: 0 100; } }
+        .activity-timeline .activity-item:last-child { border-bottom: none !important; margin-bottom: 0 !important; padding-bottom: 0 !important; }
+        .bg-primary-soft { background-color: rgba(78, 115, 250, 0.1); }
+        .bg-success-soft { background-color: rgba(92, 184, 92, 0.1); }
+        .bg-warning-soft { background-color: rgba(240, 173, 78, 0.1); }
+        .bg-light-hover:hover { background-color: #f8f9fa !important; transition: all 0.3s ease; }
+        .info-item { margin-bottom: 0.5rem; }
+        .info-item label { display: block; color: #6c757d; font-size: 0.875rem; margin-bottom: 0.25rem; }
+        .info-item p { font-weight: 500; margin-bottom: 0; }
+        .form-control:focus, .form-select:focus { border-color: #4e73fa; box-shadow: 0 0 0 0.25rem rgba(78, 115, 250, 0.25); }
+        .avatar-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 50%;
+            border: 3px solid #f8f9fa;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .avatar-container:hover .avatar-overlay {
+            opacity: 1;
+        }
+        
+        .img-container {
+            max-height: 400px;
+            text-align: center;
+        }
+        
+        .img-container img {
+            max-width: 100%;
+            max-height: 400px;
+        }
+        
+        .cropper-view-box,
+        .cropper-face {
+            border-radius: 50%;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let cropper;
+            
+            // Change avatar button click handler
+            $("#change-avatar-btn").click(function() {
+                $("#avatar-upload").click();
+            });
+            
+            // New upload avatar button click handler
+            $("#upload-avatar-btn").click(function() {
+                $("#avatar-upload").click();
+            });
+            
+            // Handle file selection
+            $("#avatar-upload").change(function() {
+                var file = this.files[0];
+                if (file) {
+                    // Check file type
+                    if (!file.type.match('image.*')) {
+                        alert('Vui lòng chọn file hình ảnh.');
+                        return;
+                    }
+                    
+                    // Check file size (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Kích thước file quá lớn. Vui lòng chọn file dưới 5MB.');
+                        return;
+                    }
+                    
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        // Set preview image
+                        $("#avatar-image").attr('src', e.target.result);
+                        
+                        // Show modal
+                        var avatarModal = new bootstrap.Modal(document.getElementById('avatar-modal'));
+                        avatarModal.show();
+                        
+                        // Initialize cropper when modal is shown
+                        $('#avatar-modal').on('shown.bs.modal', function() {
+                            if (cropper) {
+                                cropper.destroy();
+                            }
+                            
+                            cropper = new Cropper(document.getElementById('avatar-image'), {
+                                aspectRatio: 1,
+                                viewMode: 1,
+                                dragMode: 'move',
+                                autoCropArea: 0.8,
+                                responsive: true,
+                                guides: true,
+                                highlight: false,
+                                cropBoxMovable: true,
+                                cropBoxResizable: true,
+                                zoomOnWheel: true
+                            });
+                        });
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Cropper control buttons
+            $('#rotate-left').click(function() {
+                cropper.rotate(-90);
+            });
+            
+            $('#rotate-right').click(function() {
+                cropper.rotate(90);
+            });
+            
+            $('#zoom-in').click(function() {
+                cropper.zoom(0.1);
+            });
+            
+            $('#zoom-out').click(function() {
+                cropper.zoom(-0.1);
+            });
+            
+            // Save avatar click handler
+            $("#save-avatar").click(function() {
+                if (!cropper) {
+                    alert('Không thể xử lý hình ảnh. Vui lòng thử lại.');
+                    return;
+                }
+                
+                // Show loading state
+                $(this).prop('disabled', true);
+                $('.upload-status').show();
+                
+                var canvas = cropper.getCroppedCanvas({
+                    width: 300,
+                    height: 300,
+                    fillColor: '#fff',
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
+                
+                var avatarData = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // Send to server
+                $.ajax({
+                    url: '@Url.Action("UpdateAvatar", "Account")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ AvatarData: avatarData }),
+                    beforeSend: function(xhr) {
+                        // Get the anti-forgery token from the form
+                        var token = $("#antiforgery-form input[name='__RequestVerificationToken']").val();
+                        xhr.setRequestHeader("RequestVerificationToken", token);
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Update displayed avatar with cache busting
+                            var timestamp = new Date().getTime();
+                            var newAvatarUrl = response.avatarUrl + '?v=' + timestamp;
+                            $("#user-avatar").attr('src', newAvatarUrl);
+                            
+                            // Close modal
+                            $("#avatar-modal").modal('hide');
+                            
+                            // Show success message
+                            alert(response.message || 'Cập nhật ảnh đại diện thành công!');
+                        } else {
+                            alert(response.message || 'Có lỗi xảy ra khi cập nhật ảnh đại diện.');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Upload error:', xhr);
+                        alert('Đã xảy ra lỗi khi tải lên ảnh. Vui lòng thử lại sau.');
+                    },
+                    complete: function() {
+                        // Reset loading state
+                        $("#save-avatar").prop('disabled', false);
+                        $('.upload-status').hide();
+                    }
+                });
+            });
+            
+            // Reset cropper when modal is hidden
+            $('#avatar-modal').on('hidden.bs.modal', function() {
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,209 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Trang chủ";
+    var topics = ViewBag.Topics as List<TopicModel> ?? new List<TopicModel>();
+}
+
+<!-- Hero Section -->
+<section class="hero-section py-5 mb-4 bg-light rounded-3">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <h1 class="animate__animated animate__fadeInUp">Learn English the Fun Way!</h1>
+                <p class="animate__animated animate__fadeInUp animate__delay-1s">
+                    EngMate makes learning English exciting with interactive lessons, 
+                    fun vocabulary games, and engaging exercise.
+                </p>
+            </div>
+            <div class="col-md-5 text-center">
+                <div class="text-center">
+                    <img src="~/images/TrangChu.jpg" alt="Kids Learning English" class="hero-image img-fluid" style="max-height: 300px;">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Topics Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="fw-bold">Chủ đề từ vựng</h2>
+                        <p class="text-muted">Chọn một chủ đề để bắt đầu học từ vựng</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var topic in topics)
+            {
+                <div class="col-md-6 col-lg-4 topic-item" data-level="@topic.Level">
+                    <div class="card h-100 border-0 shadow-sm topic-card" style="background-color: @topic.BackgroundColor">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between mb-3">
+                                <div>
+                                    <span class="badge bg-light text-dark">@topic.Level</span>
+                                    <span class="badge bg-light text-dark ms-2">@topic.WordCount từ</span>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mb-3">
+                                <img src="@topic.IconPath" alt="@topic.Name_CD" class="topic-icon" style="width: 150px; height: 150px;" />
+                            </div>
+                            
+                            <h3 class="card-title text-center fw-bold mb-3">@topic.Name_CD</h3>
+                            <p class="card-text text-center">@topic.Description_CD</p>
+                            
+                            <a href="@Url.Action("Topic", "Vocabulary", new { id = topic.ID_CD })" class="btn btn-primary w-100 mt-3">
+                                <i class="fas fa-book me-2"></i> Học ngay
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <div class="col-12 text-center mt-4">
+                <a href="@Url.Action("Index", "Vocabulary")" class="btn btn-outline-primary">
+                    <i class="fas fa-th-large me-2"></i> Xem tất cả chủ đề
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row mb-4 text-center">
+            <div class="col-md-12">
+                <h2 class="fw-bold">Tính năng nổi bật</h2>
+                <p class="text-muted">Phương pháp học tiếng Anh toàn diện, hiệu quả</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 feature-card">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <i class="fas fa-book text-primary fa-2x"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Từ vựng phong phú</h4>
+                        <p class="card-text">Kho từ vựng đa dạng theo các chủ đề, kèm hình ảnh, âm thanh và ví dụ minh họa giúp ghi nhớ từ vựng tốt hơn.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 feature-card">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <i class="fas fa-graduation-cap text-success fa-2x"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Ngữ pháp dễ hiểu</h4>
+                        <p class="card-text">Bài giảng ngữ pháp súc tích, dễ hiểu, đi kèm ví dụ và bài tập thực hành giúp nắm vững kiến thức.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 feature-card">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <i class="fas fa-tasks text-warning fa-2x"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Bài tập đa dạng</h4>
+                        <p class="card-text">Hệ thống bài tập và kiểm tra đa dạng, từ cơ bản đến nâng cao, giúp củng cố kiến thức và theo dõi tiến độ học tập.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filter topics by level
+            const levelFilters = document.querySelectorAll('#levelFilterDropdown + .dropdown-menu .dropdown-item');
+            levelFilters.forEach(filter => {
+                filter.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Update active state
+                    levelFilters.forEach(item => item.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update dropdown text
+                    const level = this.getAttribute('data-level');
+                    document.getElementById('levelFilterDropdown').innerHTML = 
+                        `<i class="fas fa-filter me-1"></i> ${this.textContent}`;
+                    
+                    // Filter topics
+                    const topicItems = document.querySelectorAll('.topic-item');
+                    topicItems.forEach(item => {
+                        if (level === 'all' || item.getAttribute('data-level') === level) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}
+
+<style>
+    .hero-section {
+        background-color: #ffffff;
+        padding: 80px 0;
+        position: relative;
+    }
+    
+    .hero-image {
+        max-width: 90%;
+    }
+    
+    .animated {
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @@keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
+    }
+    
+    .topic-card {
+        transition: all 0.3s;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .topic-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .topic-icon {
+        transition: all 0.5s;
+    }
+    
+    .topic-card:hover .topic-icon {
+        transform: scale(1.1);
+    }
+    
+    .feature-card {
+        transition: all 0.3s;
+        border-radius: 15px;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+</style>
+

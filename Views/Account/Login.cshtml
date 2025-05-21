@@ -1,0 +1,131 @@
+@model TiengAnh.Models.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="text-center mb-4">
+                        <img src="~/images/Logo.png" alt="EngMate Logo" class="mb-3" style="width: 80px; height: 80px;" />
+                        <h1 class="h3 fw-bold mb-3">Đăng nhập vào EngMate</h1>
+                        <p class="text-muted">Vui lòng đăng nhập để truy cập các tính năng đầy đủ</p>
+                    </div>
+
+                    <!-- Hiển thị lỗi -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <div asp-validation-summary="All" class="text-danger"></div>
+                        </div>
+                    }
+                    
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <!-- Google login button -->
+                    <div class="d-grid mb-4">
+                        <form asp-action="ExternalLogin" asp-controller="Account" method="post">
+                            <input type="hidden" name="provider" value="Google" />
+                            <input type="hidden" name="returnUrl" value="@Model?.ReturnUrl" />
+                            <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center py-2">
+                                <i class="fab fa-google me-2"></i> Đăng nhập với Google
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="text-center my-4">
+                        <span class="divider-text">Hoặc đăng nhập với email</span>
+                    </div>
+
+                    <form asp-controller="Account" asp-action="Login" method="post">
+                        @if (Model?.ReturnUrl != null)
+                        {
+                            <input type="hidden" asp-for="ReturnUrl" />
+                        }
+                        else
+                        {
+                            <input type="hidden" name="ReturnUrl" value="" />
+                        }
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" asp-for="Email" placeholder="Nhập địa chỉ email" required autofocus>
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" asp-for="Password" placeholder="Nhập mật khẩu" required>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" asp-for="RememberMe">
+                                <label class="form-check-label" for="rememberMe">Ghi nhớ đăng nhập</label>
+                            </div>
+                            <a href="#" class="text-decoration-none">Quên mật khẩu?</a>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i> Đăng nhập
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <p class="mb-0">Bạn chưa có tài khoản? <a href="@Url.Action("Register", "Account")" class="text-decoration-none fw-bold">Đăng ký ngay</a></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .divider-text {
+            position: relative;
+            text-align: center;
+            color: #6c757d;
+        }
+        .divider-text::before,
+        .divider-text::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background-color: #dee2e6;
+        }
+        .divider-text::before {
+            left: 0;
+        }
+        .divider-text::after {
+            right: 0;
+        }
+    </style>
+}

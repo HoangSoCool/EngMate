@@ -1,0 +1,129 @@
+@model TiengAnh.Models.TestModel
+@{
+    ViewData["Title"] = "Kết quả bài kiểm tra";
+    
+    // Get data from TempData (populated by the controller)
+    var score = TempData["Score"] != null ? Convert.ToInt32(TempData["Score"]) : 0;
+    var correctCount = TempData["CorrectCount"] != null ? Convert.ToInt32(TempData["CorrectCount"]) : 0;
+    var totalQuestions = 20;
+    var timeTaken = TempData["TimeTaken"]?.ToString() ?? "00:00";
+    
+    // Get completion time from TempData if available
+    var completedAt = TempData["CompletedAt"] != null ? 
+        Convert.ToDateTime(TempData["CompletedAt"]) : 
+        DateTime.Now;
+    
+    // Keep the data available for the next request (for Detail view)
+    TempData.Keep("UserAnswers");
+    TempData.Keep("Score");
+    TempData.Keep("CorrectCount");
+    TempData.Keep("TimeTaken");
+    TempData.Keep("CompletedAt");
+    
+    // Determine message based on score
+    string message = score >= 80 ? "Xuất sắc!" :
+                    score >= 70 ? "Tốt!" :
+                    score >= 60 ? "Khá!" :
+                    score >= 50 ? "Trung bình!" : "Cần cố gắng hơn!";
+                    
+    // Determine color based on score
+    string colorClass = score >= 80 ? "success" :
+                      score >= 60 ? "info" :
+                      score >= 50 ? "warning" : "danger";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow">
+                <div class="card-body p-5 text-center">
+                    <h1 class="mb-4">Kết quả bài kiểm tra</h1>
+                    <h2 class="text-primary mb-3">@Model.Title</h2>
+                    
+                    <div class="score-circle mx-auto mb-4 position-relative" style="width: 200px; height: 200px;">
+                        <svg class="position-absolute top-0 start-0" width="200" height="200" viewBox="0 0 200 200">
+                            <circle cx="100" cy="100" r="90" fill="none" stroke="#eeeeee" stroke-width="10" />
+                            <circle cx="100" cy="100" r="90" fill="none" stroke="var(--bs-@colorClass)" stroke-width="10" 
+                                    stroke-dasharray="565.48" stroke-dashoffset="@(565.48 - (565.48 * score / 100))" 
+                                    transform="rotate(-90 100 100)" />
+                        </svg>
+                        <div class="position-absolute top-50 start-50 translate-middle">
+                            <h1 class="display-3 fw-bold mb-0">@score%</h1>
+                            <p class="fw-bold text-@colorClass">@message</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="bi bi-check-circle text-success me-2"></i>Câu đúng</h5>
+                                    <p class="display-6 mb-0">@correctCount/@totalQuestions</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="bi bi-clock text-info me-2"></i>Thời gian</h5>
+                                    <p class="display-6 mb-0">@timeTaken</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add completion time display here -->
+                    <div class="text-muted mb-4">
+                        Nộp lúc: @completedAt.ToString("dd/MM/yyyy HH:mm") (GMT+7)
+                    </div>
+                    
+                    <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+                        <a href="@Url.Action("Detail", "Test", new { id = Model.Id })" class="btn btn-primary btn-lg">
+                            <i class="bi bi-list-check me-2"></i>Xem chi tiết bài làm
+                        </a>
+                        <a href="@Url.Action("Index", "Test")" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (ViewBag.InfoMessage != null)
+{
+    <div class="alert alert-info mt-3">
+        <i class="bi bi-info-circle me-2"></i>
+        @ViewBag.InfoMessage
+    </div>
+}
+
+<style>
+    .score-circle circle {
+        transition: stroke-dashoffset 1s ease-in-out;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // Animation for score display
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate the number counting up
+            const score = @score;
+            let currentScore = 0;
+            const duration = 1500; // 1.5 seconds
+            const frameRate = 30; // 30 fps
+            const increment = score / (duration / (1000 / frameRate));
+            
+            const counter = setInterval(function() {
+                currentScore += increment;
+                if (currentScore >= score) {
+                    currentScore = score;
+                    clearInterval(counter);
+                }
+                document.querySelector('.display-3').textContent = Math.round(currentScore) + '%';
+            }, 1000 / frameRate);
+        });
+    </script>
+}

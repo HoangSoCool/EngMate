@@ -1,0 +1,142 @@
+@model TiengAnh.Models.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="text-center mb-4">
+                        <img src="~/images/Logo.png" alt="EngMate Logo" class="mb-3" style="width: 80px; height: 80px;" />
+                        <h1 class="h3 fw-bold mb-3">Tạo tài khoản EngMate</h1>
+                        <p class="text-muted">Đăng ký để bắt đầu học tiếng Anh cùng EngMate</p>
+                    </div>
+                    
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <div asp-validation-summary="All" class="text-danger"></div>
+                        </div>
+                    }
+                    
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    
+                    <!-- Google signup button -->
+                    <div class="d-grid mb-4">
+                        <form asp-action="ExternalLogin" asp-controller="Account" method="post">
+                            <input type="hidden" name="provider" value="Google" />
+                            <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center py-2">
+                                <i class="fab fa-google me-2"></i> Đăng ký với Google
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="text-center my-4">
+                        <span class="divider-text">Hoặc đăng ký với email</span>
+                    </div>
+
+                    <form asp-controller="Account" asp-action="Register" method="post">
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Họ và tên</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="fullName" asp-for="FullName" placeholder="Nhập họ và tên của bạn" required autofocus>
+                            </div>
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" asp-for="Email" placeholder="Nhập địa chỉ email" required>
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="userName" class="form-label">Tên người dùng</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-at"></i></span>
+                                <input type="text" class="form-control" id="userName" asp-for="UserName" placeholder="Chọn tên người dùng" required>
+                            </div>
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" asp-for="Password" placeholder="Tạo mật khẩu (ít nhất 8 ký tự)" required>
+                            </div>
+                            <div class="form-text">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số.</div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="confirmPassword" class="form-label">Xác nhận mật khẩu</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="confirmPassword" asp-for="ConfirmPassword" placeholder="Nhập lại mật khẩu" required>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="acceptTerms" asp-for="AcceptTerms" required>
+                                <label class="form-check-label" for="acceptTerms">
+                                    Tôi đồng ý với <a href="#" class="text-decoration-none">Điều khoản sử dụng</a> và <a href="#" class="text-decoration-none">Chính sách riêng tư</a>
+                                </label>
+                                <span asp-validation-for="AcceptTerms" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i> Đăng ký
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <p class="mb-0">Bạn đã có tài khoản? <a href="@Url.Action("Login", "Account")" class="text-decoration-none fw-bold">Đăng nhập ngay</a></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .divider-text {
+            position: relative;
+            text-align: center;
+            color: #6c757d;
+        }
+        .divider-text::before,
+        .divider-text::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background-color: #dee2e6;
+        }
+        .divider-text::before {
+            left: 0;
+        }
+        .divider-text::after {
+            right: 0;
+        }
+    </style>
+}

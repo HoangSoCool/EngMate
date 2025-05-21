@@ -1,0 +1,494 @@
+@using TiengAnh.Extensions
+@using System.Security.Claims
+@model List<VocabularyModel>
+@{
+    ViewData["Title"] = ViewBag.Topic?.Name_CD ?? "Chủ đề từ vựng";
+    var topic = ViewBag.Topic as TopicModel;
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    
+    // Tính toán cho phân trang
+    int pageSize = 6;
+    int page = ViewBag.Page != null ? (int)ViewBag.Page : 1;
+    if (page < 1) page = 1;
+    int totalItems = Model.Count;
+    int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+    if (page > totalPages && totalPages > 0) page = totalPages;
+    
+    var vocabulariesOnPage = Model
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToList();
+}
+
+@section Styles {
+    <style>
+        .favorite-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .favorite-btn i {
+            font-size: 1.2rem;
+            color: #adb5bd;
+            transition: all 0.3s;
+        }
+        
+        .favorite-btn:hover i {
+            color: #dc3545;
+            transform: scale(1.2);
+        }
+        
+        .favorite-btn.active i {
+            color: #dc3545;
+        }
+        
+        .vocabulary-card {
+            transition: all 0.3s ease;
+            height: 100%;
+            min-height: 240px; /* Ensure consistent card height */
+        }
+        
+        .vocabulary-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .vocabulary-card .col-md-4 {
+            padding-right: 0;
+        }
+        
+        .vocabulary-card .content-column {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .vocabulary-img-container {
+            height: 240px;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+        }
+        
+        .vocabulary-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+        
+        .audio-btn {
+            background: none;
+            border: none;
+            color: #4e73df;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .audio-btn:hover {
+            transform: scale(1.2);
+        }
+        
+        .quiz-option {
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .quiz-option:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .quiz-option.selected {
+            background-color: #4e73df;
+            color: white;
+            border-color: #4e73df;
+        }
+        
+        .quiz-option.correct {
+            background-color: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .quiz-option.wrong {
+            background-color: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .audio-btn.playing {
+            animation: pulse-audio 1s infinite;
+        }
+        
+        @@keyframes pulse-audio {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+}
+
+<!-- Topic Header -->
+<div class="container mt-5">
+    <form id="antiforgeryForm">
+        @Html.AntiForgeryToken()
+    </form>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Vocabulary")">Từ vựng</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@(topic?.Name_CD ?? "Chủ đề")</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row align-items-center mb-5">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold mb-3">Chủ đề: @(topic?.Name_CD ?? "Từ vựng")</h1>
+            <p class="lead">@(topic?.Description_CD ?? "Danh sách từ vựng theo chủ đề.")</p>
+            <div class="d-flex align-items-center mt-3">
+                <span class="badge badge-primary me-2">@Model.Count từ vựng</span>
+                <span class="badge badge-warning">Trình độ: @topic?.Level</span>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <img src="@(topic?.IconPath ?? "/images/icons/default.png")" alt="@(topic?.Name_CD ?? "Chủ đề")" class="topic-icon-large animate__animated animate__bounce" style="width: 120px; height: 120px;" />
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>
+                        Mẹo học từ vựng
+                    </h5>
+                    <p class="card-text">Hãy nhấn vào nút <i class="fas fa-volume-up text-primary"></i> để nghe phát âm chuẩn của từng từ vựng, sau đó lặp lại và ghi nhớ. Học 5-7 từ mỗi ngày sẽ hiệu quả hơn là cố gắng học tất cả cùng một lúc.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-gamepad text-success me-2"></i>
+                        Trò chơi học từ vựng
+                    </h5>
+                    <p class="card-text">Sau khi học từ vựng, hãy thử sức với các bài tập và trò chơi để ghi nhớ lâu hơn!</p>
+                    <div class="d-flex mt-3">
+                        <a href="@Url.Action("Flashcard", "Vocabulary", new { id = topic?.ID_CD })" class="btn btn-sm btn-primary me-2">
+                            <i class="fas fa-gamepad me-1"></i> Chơi Flashcards
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary List -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="fw-bold">Danh sách từ vựng</h2>
+                <div class="d-flex align-items-center"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var vocab in vocabulariesOnPage)
+        {
+            bool isNoImageTopic = new[] { 13, 14, 15, 16, 17 }.Contains(vocab.ID_CD);
+            <div class="col-lg-6 vocabulary-item" data-level="@vocab.Level_TV" data-type="@vocab.PartOfSpeech">
+                <div class="card border-0 shadow-sm vocabulary-card">
+                    <div class="card-body p-0">
+                        <div class="row g-0 h-100">
+                            @if (!isNoImageTopic)
+                            {
+                                <div class="col-md-4">
+                                    <div class="vocabulary-img-container">
+                                        <img src="@vocab.Image_TV" alt="@vocab.Word_TV" class="vocabulary-img" />
+                                    </div>
+                                </div>
+                            }
+                            <div class="@(isNoImageTopic ? "col-md-12" : "col-md-8") content-column">
+                                <div class="p-3 h-100 d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h3 class="vocabulary-title word">@vocab.Word_TV</h3>
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-light text-dark me-2 part-of-speech">
+                                                    @Html.DisplayPartOfSpeech(vocab.PartOfSpeech ?? "")
+                                                </span>
+                                                <span class="level-badge level-@vocab.Level_TV">@vocab.Level_TV</span>
+                                            </div>
+                                        </div>
+                                        <button class="audio-btn" data-word="@vocab.Word_TV">
+                                            <i class="fas fa-volume-up"></i>
+                                        </button>
+                                    </div>
+
+                                    <p class="vocabulary-translation mb-2"><strong>Nghĩa:</strong> @vocab.Meaning_TV</p>
+                                    <p class="example text-muted mb-3"><em>@vocab.Example_TV</em></p>
+                                    
+                                    <div class="d-flex justify-content-between mt-auto">
+                                        <a href="@Url.Action("Details", "Vocabulary", new { id = vocab.ID_TV })" class="btn btn-sm btn-outline-primary">
+                                            Chi tiết <i class="fas fa-arrow-right ms-1"></i>
+                                        </a>
+                                        <button class="favorite-btn @(vocab.IsFavorite ? "active" : "")" data-id="@vocab.ID_TV">
+                                            <i class="@(vocab.IsFavorite ? "fas" : "far") fa-heart"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    
+    <!-- Pagination -->
+    @if (totalPages > 1)
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <nav aria-label="Pagination">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(page <= 1 ? "disabled" : "")">
+                            <a class="page-link" href="@Url.Action("Topic", "Vocabulary", new { id = topic?.ID_CD, page = page - 1 })">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == page ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Topic", "Vocabulary", new { id = topic?.ID_CD, page = i })">
+                                    @i
+                                </a>
+                            </li>
+                        }
+                        
+                        <li class="page-item @(page >= totalPages ? "disabled" : "")">
+                            <a class="page-link" href="@Url.Action("Topic", "Vocabulary", new { id = topic?.ID_CD, page = page + 1 })">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Practice Section -->
+<section class="py-5 bg-light mt-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">Luyện tập từ vựng</h2>
+            <p class="lead">Hãy làm một số bài tập đơn giản để ghi nhớ từ vựng tốt hơn</p>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="card-title mb-4">Mini Quiz</h4>
+                
+                <div class="quiz-question mb-4">
+                    <p class="fw-bold mb-3">1. Đâu là nghĩa của từ "@Model.FirstOrDefault()?.Word_TV"?</p>
+                    <div class="quiz-option" data-correct="true">
+                        <span>A. @Model.FirstOrDefault()?.Meaning_TV</span>
+                    </div>
+                    <div class="quiz-option">
+                        <span>B. Một loại đồ ăn</span>
+                    </div>
+                    <div class="quiz-option">
+                        <span>C. Một loại xe</span>
+                    </div>
+                    <div class="quiz-option">
+                        <span>D. Một loại cây</span>
+                    </div>
+                </div>
+
+                @if (Model.Count >= 2)
+                {
+                    <div class="quiz-question">
+                        <p class="fw-bold mb-3">2. Đâu là nghĩa của từ "@Model.Skip(1).FirstOrDefault()?.Word_TV"?</p>
+                        <div class="quiz-option">
+                            <span>A. Một loại đồ uống</span>
+                        </div>
+                        <div class="quiz-option" data-correct="true">
+                            <span>B. @Model.Skip(1).FirstOrDefault()?.Meaning_TV</span>
+                        </div>
+                        <div class="quiz-option">
+                            <span>C. Một loại thể thao</span>
+                        </div>
+                        <div class="quiz-option">
+                            <span>D. Một loại hoa</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Biến trạng thái để ngăn lặp âm thanh
+            let isPlaying = false;
+
+            // Thêm xử lý cho nút yêu thích
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const vocabId = this.getAttribute('data-id');
+                    const heartIcon = this.querySelector('i');
+                    
+                    let token = document.querySelector('input[name="__RequestVerificationToken"]');
+                    if (!token) {
+                        const form = document.createElement('form');
+                        form.innerHTML = '@Html.AntiForgeryToken()';
+                        document.body.appendChild(form);
+                        token = document.querySelector('input[name="__RequestVerificationToken"]');
+                    }
+
+                    fetch(`/Vocabulary/ToggleFavorite/${vocabId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'RequestVerificationToken': token ? token.value : ''
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            if (data.isFavorite) {
+                                heartIcon.classList.replace('far', 'fas');
+                                this.classList.add('active');
+                            } else {
+                                heartIcon.classList.replace('fas', 'far');
+                                this.classList.remove('active');
+                            }
+                            showNotification(data.message, data.isFavorite ? 'success' : 'info');
+                        } else {
+                            if (data.message.includes('đăng nhập')) {
+                                window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                            } else {
+                                showNotification(data.message, 'warning');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('Đã xảy ra lỗi. Vui lòng thử lại sau.', 'danger');
+                    });
+                });
+            });
+            
+            // Xử lý phát âm thanh
+            document.querySelectorAll('.audio-btn').forEach(btn => {
+                // Gỡ bỏ mọi trình xử lý sự kiện cũ
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', function() {
+                    if (isPlaying) return; // Ngăn gọi nếu đang phát
+                    const word = this.getAttribute('data-word');
+                    console.log('Audio button clicked:', word); // Debug
+                    playVocabAudio(word, this);
+                });
+            });
+            
+            function playVocabAudio(word, button) {
+                if (isPlaying) return;
+                isPlaying = true;
+                
+                const audioUrl = `https://ssl.gstatic.com/dictionary/static/sounds/oxford/${word.toLowerCase()}--_us_1.mp3`;
+                window.currentAudio = new Audio(audioUrl);
+                
+                button.classList.add('playing');
+                
+                window.currentAudio.onended = function() {
+                    button.classList.remove('playing');
+                    isPlaying = false;
+                    console.log('Audio ended:', word); // Debug
+                };
+                
+                window.currentAudio.onerror = function(e) {
+                    button.classList.remove('playing');
+                    isPlaying = false;
+                    showNotification(`Không thể phát âm thanh cho từ: ${word}`, 'warning');
+                    console.error('Lỗi phát âm thanh:', e);
+                };
+                
+                window.currentAudio.play().catch(e => {
+                    button.classList.remove('playing');
+                    isPlaying = false;
+                    showNotification(`Không thể phát âm thanh cho từ: ${word}`, 'warning');
+                    console.error('Lỗi phát âm thanh:', e);
+                });
+            }
+            
+            function showNotification(message, type) {
+                const notif = document.createElement('div');
+                notif.className = `alert alert-${type} position-fixed`;
+                notif.style.top = '20px';
+                notif.style.right = '20px';
+                notif.style.zIndex = '9999';
+                notif.style.minWidth = '300px';
+                notif.style.padding = '15px';
+                notif.style.boxShadow = '0 0.5rem 1rem rgba(0,0,0,0.15)';
+                notif.innerHTML = message;
+                
+                document.body.appendChild(notif);
+                
+                setTimeout(() => {
+                    notif.style.opacity = '0';
+                    notif.style.transition = 'opacity 0.5s';
+                    setTimeout(() => {
+                        document.body.removeChild(notif);
+                    }, 500);
+                }, 3000);
+            }
+        });
+    </script>
+}
+@functions {
+    public string GetPartOfSpeechName(string code)
+    {
+        Dictionary<string, string> types = new Dictionary<string, string>
+        {
+            { "n", "Danh từ (Noun)" },
+            { "v", "Động từ (Verb)" },
+            { "adj", "Tính từ (Adjective)" },
+            { "adv", "Trạng từ (Adverb)" },
+            { "prep", "Giới từ (Preposition)" },
+            { "conj", "Liên từ (Conjunction)" },
+            { "pron", "Đại từ (Pronoun)" },
+            { "det", "Hạn định từ (Determiner)" },
+            { "interj", "Thán từ (Interjection)" }
+        };
+        
+        return types.ContainsKey(code) ? types[code] : code;
+    }
+}

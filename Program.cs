@@ -23,6 +23,8 @@ builder.Services.AddControllersWithViews();
 // Register MongoDB services
 builder.Services.Configure<TiengAnh.Services.MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings"));
+
+// Trước đoạn code này:
 builder.Services.AddSingleton<MongoDbService>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
@@ -38,16 +40,31 @@ builder.Services.AddSingleton<MongoDbService>(sp =>
     // Log thông tin để debug
     logger.LogInformation($"MongoDB Config Source: {(connectionString != null ? "Found" : "Not Found")}");
     
+    // Kiểm tra tất cả các biến môi trường để dễ debug
+    logger.LogInformation("Kiểm tra biến môi trường:");
+    foreach (var env in Environment.GetEnvironmentVariables().Keys)
+    {
+        if (env.ToString().Contains("MONGO") || env.ToString().Contains("DB"))
+        {
+            logger.LogInformation($"ENV: {env}");
+        }
+    }
+    
     if (string.IsNullOrEmpty(connectionString))
     {
         logger.LogError("Không tìm thấy chuỗi kết nối MongoDB. Vui lòng cấu hình biến môi trường.");
-        // Ném ra lỗi chỉ trong môi trường development
-        if (builder.Environment.IsDevelopment())
+        
+        // Trong môi trường production, thử sử dụng chuỗi kết nối MongoDB Atlas mặc định
+        if (!builder.Environment.IsDevelopment())
+        {
+            // Chuỗi kết nối MongoDB Atlas mà bạn biết rõ - có thể thay đổi tùy theo project của bạn
+            connectionString = "mongodb+srv://hoangnguyntb:hoang123@engmate.7s6pdbs.mongodb.net/TiengAnhDB?retryWrites=true&w=majority";
+            logger.LogWarning("Sử dụng chuỗi kết nối MongoDB Atlas mặc định");
+        }
+        else
         {
             throw new InvalidOperationException("MongoDB connection string is not configured.");
         }
-        // Trong môi trường production, sử dụng chuỗi kết nối giả để không làm crash ứng dụng
-        connectionString = "mongodb://localhost:27017";
     }
     
     var databaseName = configuration["MongoDB:DatabaseName"] 

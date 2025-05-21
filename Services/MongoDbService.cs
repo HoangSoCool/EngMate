@@ -29,17 +29,29 @@ namespace TiengAnh.Services
                     throw new ArgumentNullException(nameof(connectionString));
                 }
 
-                _logger?.LogInformation($"Đang kết nối MongoDB với connectionString: {connectionString.Substring(0, Math.Min(20, connectionString.Length))}...");
+                // Không ghi log toàn bộ connection string để tránh rò rỉ thông tin nhạy cảm
+                string safeConnectionString = connectionString.Contains("mongodb") 
+                    ? $"{connectionString.Substring(0, connectionString.IndexOf("@") > 0 ? connectionString.IndexOf("@") : Math.Min(20, connectionString.Length))}..."
+                    : connectionString;
+                
+                _logger?.LogInformation($"Đang kết nối MongoDB với: {safeConnectionString}");
                 
                 RegisterConventions();
                 
                 // Thêm các tùy chọn cho MongoClient để tăng độ tin cậy
                 var settings = MongoClientSettings.FromConnectionString(connectionString);
-                settings.ServerSelectionTimeout = TimeSpan.FromSeconds(5);
-                settings.ConnectTimeout = TimeSpan.FromSeconds(10);
+                settings.ServerSelectionTimeout = TimeSpan.FromSeconds(15); // Tăng timeout lên
+                settings.ConnectTimeout = TimeSpan.FromSeconds(30);
+                settings.HeartbeatInterval = TimeSpan.FromSeconds(10);
+                settings.RetryReads = true;
+                settings.RetryWrites = true;
                 
                 var client = new MongoClient(settings);
                 _database = client.GetDatabase(databaseName);
+                
+                // Kiểm tra kết nối bằng cách thực hiện một lệnh đơn giản
+                var isConnected = _database.RunCommand<BsonDocument>(new BsonDocument("ping", 1)).Contains("ok");
+                _logger?.LogInformation($"MongoDB ping test: {(isConnected ? "Thành công" : "Thất bại")}");
                 
                 _logger?.LogInformation("MongoDB initialized successfully");
             }

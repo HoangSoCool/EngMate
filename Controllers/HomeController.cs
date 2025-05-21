@@ -68,6 +68,34 @@ namespace TiengAnh.Controllers
         {
             try
             {
+                // Kiểm tra nếu có lỗi được lưu trong TempData
+                if (TempData["ErrorMessage"] != null)
+                {
+                    ViewBag.ErrorMessage = TempData["ErrorMessage"].ToString();
+                    _logger.LogError("Lỗi từ TempData: {ErrorMessage}", (string)ViewBag.ErrorMessage);
+                }
+                else
+                {
+                    // Kiểm tra các loại lỗi phổ biến
+                    var exceptionFeature = HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+                    if (exceptionFeature != null)
+                    {
+                        var exception = exceptionFeature.Error;
+                        ViewBag.ErrorMessage = exception.Message;
+                        
+                        if (exception is TimeoutException)
+                        {
+                            ViewBag.ErrorMessage = "Không thể kết nối tới cơ sở dữ liệu MongoDB. Vui lòng kiểm tra cấu hình kết nối.";
+                        }
+                        else if (exception is System.Net.Sockets.SocketException)
+                        {
+                            ViewBag.ErrorMessage = "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và cấu hình MongoDB.";
+                        }
+                        
+                        _logger.LogError(exception, "Chi tiết lỗi: {ErrorMessage}", exception.Message);
+                    }
+                }
+                
                 // Log lỗi để debug
                 _logger.LogError("Đã xảy ra lỗi. RequestId: {RequestId}", 
                     Activity.Current?.Id ?? HttpContext.TraceIdentifier);

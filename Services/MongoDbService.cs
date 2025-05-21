@@ -29,9 +29,16 @@ namespace TiengAnh.Services
                     throw new ArgumentNullException(nameof(connectionString));
                 }
 
+                _logger?.LogInformation($"Đang kết nối MongoDB với connectionString: {connectionString.Substring(0, Math.Min(20, connectionString.Length))}...");
+                
                 RegisterConventions();
                 
-                var client = new MongoClient(connectionString);
+                // Thêm các tùy chọn cho MongoClient để tăng độ tin cậy
+                var settings = MongoClientSettings.FromConnectionString(connectionString);
+                settings.ServerSelectionTimeout = TimeSpan.FromSeconds(5);
+                settings.ConnectTimeout = TimeSpan.FromSeconds(10);
+                
+                var client = new MongoClient(settings);
                 _database = client.GetDatabase(databaseName);
                 
                 _logger?.LogInformation("MongoDB initialized successfully");

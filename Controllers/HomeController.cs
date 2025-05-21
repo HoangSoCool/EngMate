@@ -68,13 +68,20 @@ namespace TiengAnh.Controllers
         {
             try
             {
-                // Your existing error handling code
-                return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+                // Log lỗi để debug
+                _logger.LogError("Đã xảy ra lỗi. RequestId: {RequestId}", 
+                    Activity.Current?.Id ?? HttpContext.TraceIdentifier);
+                
+                // Hiển thị thông tin lỗi
+                return View(new ErrorViewModel { 
+                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier 
+                });
             }
             catch (Exception ex)
             {
-                // Fallback for when the error handler itself throws an exception
-                return Content($"A critical error occurred: {ex.Message}. Please check application logs for more details.");
+                // Xử lý khi error handler gặp lỗi
+                _logger.LogError(ex, "Lỗi nghiêm trọng trong trang Error: {Message}", ex.Message);
+                return Content($"Đã xảy ra lỗi nghiêm trọng: {ex.Message}. Vui lòng kiểm tra logs để biết thêm chi tiết.");
             }
         }
     }

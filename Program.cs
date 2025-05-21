@@ -26,15 +26,37 @@ builder.Services.Configure<TiengAnh.Services.MongoDbSettings>(
 builder.Services.AddSingleton<MongoDbService>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
+    var logger = sp.GetRequiredService<ILogger<MongoDbService>>();
+    
+    // Tìm kiếm chuỗi kết nối từ nhiều nguồn khác nhau
     var connectionString = configuration["MongoDB:ConnectionString"] 
-        ?? configuration["MONGODB_CONNECTION_STRING"]
-        ?? throw new InvalidOperationException("MongoDB connection string is not configured.");
+        ?? configuration["MONGODB_CONNECTION_STRING"] 
+        ?? configuration["MongoDbSettings:ConnectionString"]
+        ?? Environment.GetEnvironmentVariable("MONGODB_URI")
+        ?? Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING");
+    
+    // Log thông tin để debug
+    logger.LogInformation($"MongoDB Config Source: {(connectionString != null ? "Found" : "Not Found")}");
+    
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        logger.LogError("Không tìm thấy chuỗi kết nối MongoDB. Vui lòng cấu hình biến môi trường.");
+        // Ném ra lỗi chỉ trong môi trường development
+        if (builder.Environment.IsDevelopment())
+        {
+            throw new InvalidOperationException("MongoDB connection string is not configured.");
+        }
+        // Trong môi trường production, sử dụng chuỗi kết nối giả để không làm crash ứng dụng
+        connectionString = "mongodb://localhost:27017";
+    }
     
     var databaseName = configuration["MongoDB:DatabaseName"] 
         ?? configuration["MONGODB_DATABASE_NAME"] 
+        ?? configuration["MongoDbSettings:DatabaseName"]
+        ?? Environment.GetEnvironmentVariable("MONGODB_DATABASE_NAME")
         ?? "EngMateDB";
     
-    return new MongoDbService(connectionString, databaseName);
+    return new MongoDbService(connectionString, databaseName, logger);
 });
 
 // Replace placeholder values with environment variables

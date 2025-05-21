@@ -24,9 +24,8 @@ builder.Services.AddControllersWithViews();
 // Cấu hình Data Protection - trước khi đăng ký các dịch vụ khác
 builder.Services.AddDataProtection()
     .SetApplicationName("TiengAnh")
-    // Xóa dòng DisableAutomaticKeyGeneration() vì nó ngăn hệ thống tạo khóa mới
-    .SetDefaultKeyLifetime(TimeSpan.FromDays(90)) // Thiết lập thời gian sống của khóa
-    .ProtectKeysWithDpapi(); // Bảo vệ khóa bằng DPAPI (Windows) hoặc tự động trên Linux/macOS
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(90)); // Thiết lập thời gian sống của khóa
+    // Xóa dòng ProtectKeysWithDpapi() vì nó chỉ hoạt động trên Windows
     
 // Bỏ comment dòng sau nếu trong tương lai bạn có persistent volume trên Render
 // .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "keys")));

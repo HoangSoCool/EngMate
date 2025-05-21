@@ -66,7 +66,16 @@ namespace TiengAnh.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            try
+            {
+                // Your existing error handling code
+                return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            }
+            catch (Exception ex)
+            {
+                // Fallback for when the error handler itself throws an exception
+                return Content($"A critical error occurred: {ex.Message}. Please check application logs for more details.");
+            }
         }
     }
 }

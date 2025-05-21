@@ -23,7 +23,19 @@ builder.Services.AddControllersWithViews();
 // Register MongoDB services
 builder.Services.Configure<TiengAnh.Services.MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings"));
-builder.Services.AddSingleton<MongoDbService>();
+builder.Services.AddSingleton<MongoDbService>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var connectionString = configuration["MongoDB:ConnectionString"] 
+        ?? configuration["MONGODB_CONNECTION_STRING"]
+        ?? throw new InvalidOperationException("MongoDB connection string is not configured.");
+    
+    var databaseName = configuration["MongoDB:DatabaseName"] 
+        ?? configuration["MONGODB_DATABASE_NAME"] 
+        ?? "EngMateDB";
+    
+    return new MongoDbService(connectionString, databaseName);
+});
 
 // Replace placeholder values with environment variables
 var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];

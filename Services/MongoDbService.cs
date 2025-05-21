@@ -17,22 +17,28 @@ namespace TiengAnh.Services
         private static readonly ConcurrentDictionary<string, bool> _registeredCollections = new ConcurrentDictionary<string, bool>();
         private static bool _conventionsRegistered = false;
 
-        public MongoDbService(IOptions<MongoDbSettings> settings, ILogger<MongoDbService> logger)
+        public MongoDbService(string connectionString, string databaseName, ILogger<MongoDbService> logger = null)
         {
             _logger = logger;
             
             try
             {
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    _logger?.LogError("MongoDB connection string is null or empty");
+                    throw new ArgumentNullException(nameof(connectionString));
+                }
+
                 RegisterConventions();
                 
-                var client = new MongoClient(settings.Value.ConnectionString);
-                _database = client.GetDatabase(settings.Value.DatabaseName);
+                var client = new MongoClient(connectionString);
+                _database = client.GetDatabase(databaseName);
                 
-                _logger.LogInformation($"MongoDB connected to database: {settings.Value.DatabaseName}");
+                _logger?.LogInformation("MongoDB initialized successfully");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to initialize MongoDB: {ex.Message}");
+                _logger?.LogError(ex, "Failed to initialize MongoDB: {ErrorMessage}", ex.Message);
                 throw;
             }
         }

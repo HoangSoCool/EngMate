@@ -8,6 +8,7 @@ using MongoDB.Bson.Serialization.Conventions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Hosting;
 using TiengAnh.Middleware;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,17 @@ builder.Configuration.AddEnvironmentVariables(options =>
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Cấu hình Data Protection - trước khi đăng ký các dịch vụ khác
+builder.Services.AddDataProtection()
+    .SetApplicationName("TiengAnh")
+    .DisableAutomaticKeyGeneration(); // Tắt tạo khóa tự động
+    
+// Hoặc sử dụng cấu hình này nếu muốn lưu khóa vào thư mục cố định
+// Lưu ý: trên Render, bạn cần thêm một persistent volume nếu muốn ghi vào thư mục
+// builder.Services.AddDataProtection()
+//     .SetApplicationName("TiengAnh")
+//     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "keys")));
 
 // Register MongoDB services
 builder.Services.Configure<TiengAnh.Services.MongoDbSettings>(
@@ -138,6 +150,10 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromDays(7);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    
+    // Thêm cấu hình để không cần mã hóa
+    options.Cookie.Name = ".EngMate.Session";
 });
 
 // Suppress nullable warnings

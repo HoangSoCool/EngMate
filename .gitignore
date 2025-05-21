@@ -5,13 +5,24 @@ appsettings.Development.json
 # .NET Core build folders
 bin/
 obj/
-
-# Visual Studio files
-.vs/
 *.user
 *.userosscache
 *.suo
-*.userprefs
+*.dll
+*.exe
+*.pdb
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+
+# Visual Studio files
+.vs/
+.vscode/
+*.ncrunchsolution
+*.ncrunchproject
+*.DotSettings.user
 
 # Rider files
 .idea/
@@ -37,3 +48,19 @@ bld/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
+
+# Logs
+*.log
+logs/
+
+# Local settings
+appsettings.Development.json
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# macOS
+.DS_Store

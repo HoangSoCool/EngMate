@@ -11,6 +11,12 @@ using TiengAnh.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add in the configuration section - before creating the builder
+builder.Configuration.AddEnvironmentVariables(options => 
+{
+    options.Prefix = ""; // Allow environment variables without prefix
+});
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -18,6 +24,17 @@ builder.Services.AddControllersWithViews();
 builder.Services.Configure<TiengAnh.Services.MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings"));
 builder.Services.AddSingleton<MongoDbService>();
+
+// Replace placeholder values with environment variables
+var mongoConnectionString = builder.Configuration["MongoDbSettings:ConnectionString"];
+if (mongoConnectionString?.Contains("#{MONGODB_URI}#") == true)
+{
+    var envMongoUri = Environment.GetEnvironmentVariable("MONGODB_URI");
+    if (!string.IsNullOrEmpty(envMongoUri))
+    {
+        builder.Configuration["MongoDbSettings:ConnectionString"] = envMongoUri;
+    }
+}
 
 // Register repositories
 builder.Services.AddScoped<UserRepository>();
